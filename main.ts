@@ -11,7 +11,7 @@
 //   mkdir -p out && MAKEFUN_BOT_DIR=. MAKEFUN_OUTPUT_DIR=out node main.ts
 
 // Entry for gta6-meme-x-01: hands in the X post named in POST.json (the meme post is the entry itself).
-import { copyFileSync, mkdirSync } from 'node:fs';
+import { copyFileSync, mkdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 const BOT_DIR = process.env.MAKEFUN_BOT_DIR ?? '/bot';
@@ -19,6 +19,11 @@ const OUTPUT_DIR = process.env.MAKEFUN_OUTPUT_DIR ?? '/output';
 
 mkdirSync(OUTPUT_DIR, { recursive: true });
 try {
+  const post = JSON.parse(readFileSync(join(BOT_DIR, 'POST.json'), 'utf8')) as { url?: string };
+  if (!post.url || !/^https:\/\/(x|twitter)\.com\/[^/]+\/status\/\d+$/.test(post.url)) {
+    console.error(`POST.json does not name an X post address: ${post.url}`);
+    process.exit(1);
+  }
   copyFileSync(join(BOT_DIR, 'POST.json'), join(OUTPUT_DIR, 'POST.json'));
 } catch (err) {
   console.error(`POST.json could not be copied from ${BOT_DIR}: ${(err as Error).message}`);
